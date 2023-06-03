@@ -22,13 +22,13 @@ var cnt_arr = [];
 var sub_arr = [];
 var acp = {};
 
-conf.useprotocol = 'http'; // select one for 'http' or 'mqtt' or 'coap' or 'ws'
+conf.useprotocol = 'mqtt'; // select one for 'http' or 'mqtt' or 'coap' or 'ws'
 
 conf.sim = 'disable'; // enable or disable
 
 // build cse
 cse = {
-    host    : 'localhost',
+    host    : '192.168.1.204',
     port    : '7579',
     name    : 'Mobius',
     id      : '/Mobius2',
@@ -37,7 +37,7 @@ cse = {
 };
 
 // build ae
-let ae_name = 'KETI3_DEMO';
+let ae_name = 'SmartToilet';
 
 ae = {
     name    : ae_name,
@@ -54,28 +54,25 @@ var count = 0;
 cnt_arr = [
     {
         parent: '/' + cse.name + '/' + ae.name,
-        name: 'tvoc',
+        name: 'stool',
     },
     {
         parent: '/' + cse.name + '/' + ae.name,
-        name: 'co2',
+        name: 'const',
     },
     {
         parent: '/' + cse.name + '/' + ae.name,
-        name: 'temp',
-    },
-    {
-        parent: '/' + cse.name + '/' + ae.name,
-        name: 'led',
+        name: 'habbit',
     },
 ];
 
 // build sub
 sub_arr = [
     {
-        parent: cnt_arr[3].parent + '/'  + cnt_arr[3].name,
-        name: 'sub1',
-        nu: 'mqtt://' + cse.host + ':' + cse.mqttport + '/' + ae.id + '?ct=json', // 'http:/' + ip.address() + ':' + ae.port + '/noti?ct=json',
+    parent: '/' + cse.name + '/' + ae.name,
+    name: 'sub',
+    nu: 'mqtt://' + cse.host + ':' + cse.mqttport + '/' + ae.id + '?ct=json',
+   // 'http:/' + ip.address() + ':' + ae.port + '/noti?ct=json',
     },
 ];
 

@@ -27,14 +27,15 @@ let moment = require('moment');
 
 /* USER CODE */
 let getDataTopic = {
-    co2: '/thyme/co2',
-    tvoc: '/thyme/tvoc',
-    temp: '/thyme/temp',
+    stool: '/thyme/stool',
+    const: '/thyme/const',
+    habbit: '/thyme/habbit',
 };
 
 let setDataTopic = {
-    led: '/led/set',
+    
 };
+
 /* */
 
 let createConnection = () => {
@@ -80,7 +81,16 @@ let createConnection = () => {
                 let parent = null;
 
                 /* USER CODES */
-                if(topic === getDataTopic.co2) {
+                if(topic == getDataTopic.stool) {
+                    parent = conf.cnt[0].parent + '/' + conf.cnt[0].name;
+                    let curTime =  moment().format();
+                    let curVal = parseFloat(message.toString()).toFixed(1);
+                    content = {
+                        t: curTime,
+                        v: curVal
+                    };
+                }
+                else if(topic === getDataTopic.const) {
                     parent = conf.cnt[1].parent + '/' + conf.cnt[1].name;
                     let curTime =  moment().format();
                     let curVal = parseFloat(message.toString()).toFixed(1);
@@ -89,17 +99,8 @@ let createConnection = () => {
                         v: curVal
                     };
                 }
-                else if(topic === getDataTopic.tvoc) {
-                    parent = conf.cnt[1].parent + '/' + conf.cnt[0].name;
-                    let curTime =  moment().format();
-                    let curVal = parseFloat(message.toString()).toFixed(1);
-                    content = {
-                        t: curTime,
-                        v: curVal
-                    };
-                }
-                else if(topic === getDataTopic.temp) {
-                    parent = conf.cnt[1].parent + '/' + conf.cnt[2].name;
+                else if(topic === getDataTopic.habbit) {
+                    parent = conf.cnt[2].parent + '/' + conf.cnt[2].name;
                     let curTime =  moment().format();
                     let curVal = parseFloat(message.toString()).toFixed(1);
                     content = {
@@ -177,6 +178,20 @@ let destroyConnection = () => {
     }
 };
 
+setInterval(()=>{
+    const result = require('child_process').spawn('python', ['evaluatePOOP.py']);
+    result.stdout.on('data', function(data) {
+        let ret = data.toString().replace('\n', '').split(',');
+        let stool = ret[0];
+        let cons = ret[1];
+        let habbit = ret[2];
+        console.log('Evaluate result [stool: ${stool}, const: ${cons}, habbit: ${habbit}]');
+        doPublish(getDataTopic['stool'], stool);
+        doPublish(getDataTopic['const'], cons);
+        doPublish(getDataTopic['habbit'], habbit);
+    }
+, 3000);
+
 
 exports.ready_for_tas = function ready_for_tas () {
     createConnection();
@@ -196,4 +211,4 @@ exports.send_to_tas = function send_to_tas (topicName, message) {
     if(setDataTopic.hasOwnProperty(topicName)) {
         conf.tas.client.publish(setDataTopic[topicName], message.toString())
     }
-};
+}});
