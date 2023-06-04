@@ -13,7 +13,6 @@
  */
 
 var Onem2mClient = require('./onem2m_client');
-
 var thyme_tas = require('./thyme_tas');
 
 var options = {

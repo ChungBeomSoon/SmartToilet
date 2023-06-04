@@ -24,11 +24,12 @@ exports.buffer = tas_buffer;
 
 let mqtt = require('mqtt');
 let moment = require('moment');
+const { get } = require('http');
 
 /* USER CODE */
 let getDataTopic = {
     stool: '/thyme/stool',
-    const: '/thyme/const',
+    constipation: '/thyme/constipation',
     habbit: '/thyme/habbit',
 };
 
@@ -90,7 +91,7 @@ let createConnection = () => {
                         v: curVal
                     };
                 }
-                else if(topic === getDataTopic.const) {
+                else if(topic === getDataTopic.constipation) {
                     parent = conf.cnt[1].parent + '/' + conf.cnt[1].name;
                     let curTime =  moment().format();
                     let curVal = parseFloat(message.toString()).toFixed(1);
@@ -178,19 +179,44 @@ let destroyConnection = () => {
     }
 };
 
-setInterval(()=>{
-    const result = require('child_process').spawn('python', ['evaluatePOOP.py']);
-    result.stdout.on('data', function(data) {
-        let ret = data.toString().replace('\n', '').split(',');
-        let stool = ret[0];
-        let cons = ret[1];
-        let habbit = ret[2];
-        console.log('Evaluate result [stool: ${stool}, const: ${cons}, habbit: ${habbit}]');
-        doPublish(getDataTopic['stool'], stool);
-        doPublish(getDataTopic['const'], cons);
-        doPublish(getDataTopic['habbit'], habbit);
+let customCreateCin = (topic, message) => {
+    let content = null;
+    let parent = null;
+
+    if(topic == getDataTopic.stool) {
+        parent = conf.cnt[0].parent + '/' + conf.cnt[0].name;
+        let curTime =  moment().format();
+        let curVal = parseFloat(message.toString()).toFixed(1);
+        content = {
+            t: curTime,
+            v: curVal
+        };
     }
-, 3000);
+    else if(topic === getDataTopic.constipation) {
+        parent = conf.cnt[1].parent + '/' + conf.cnt[1].name;
+        let curTime =  moment().format();
+        let curVal = parseFloat(message.toString()).toFixed(1);
+        content = {
+            t: curTime,
+            v: curVal
+        };
+    }
+    else if(topic === getDataTopic.habbit) {
+        parent = conf.cnt[2].parent + '/' + conf.cnt[2].name;
+        let curTime =  moment().format();
+        let curVal = parseFloat(message.toString()).toFixed(1);
+        content = {
+            t: curTime,
+            v: curVal
+        };
+    }
+
+    if(content !== null) {
+        onem2m_client.create_cin(parent, 1, JSON.stringify(content), this, function (status, res_body, to, socket) {
+            console.log('x-m2m-rsc : ' + status + ' <----');
+        });
+    }
+}
 
 
 exports.ready_for_tas = function ready_for_tas () {
@@ -211,4 +237,4 @@ exports.send_to_tas = function send_to_tas (topicName, message) {
     if(setDataTopic.hasOwnProperty(topicName)) {
         conf.tas.client.publish(setDataTopic[topicName], message.toString())
     }
-}});
+};

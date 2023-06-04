@@ -75,7 +75,7 @@ var mqtt_init = function() {
 //              username: 'keti',
 //              password: 'keti123',
             protocol: "mqtt",
-            keepalive: 10,
+            keepalive: 1200,
 //              clientId: serverUID,
             protocolId: "MQTT",
             protocolVersion: 4,

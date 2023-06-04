@@ -28,18 +28,19 @@ global.sh_state = 'crtae';
 
 global.mqtt_client = null;
 
+
 // AE core
 // if(conf.useprotocol === 'mqtt') {
-//     require('./mqtt_app');
-// }
-// else
-// if(conf.useprotocol === 'coap') {
-//     require('./coap_app');
-// }
-// else if(conf.useprotocol === 'ws') {
-//     require('./ws_app');
-// }
-// else {
-    require('./app');
+    //     require('./mqtt_app');
+    // }
+    // else
+    // if(conf.useprotocol === 'coap') {
+        //     require('./coap_app');
+        // }
+        // else if(conf.useprotocol === 'ws') {
+            //     require('./ws_app');
+            // }
+            // else {
+                require('./app');
 // }
 

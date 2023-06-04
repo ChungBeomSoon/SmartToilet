@@ -22,13 +22,13 @@ var cnt_arr = [];
 var sub_arr = [];
 var acp = {};
 
-conf.useprotocol = 'mqtt'; // select one for 'http' or 'mqtt' or 'coap' or 'ws'
+conf.useprotocol = 'http'; // select one for 'http' or 'mqtt' or 'coap' or 'ws'
 
 conf.sim = 'disable'; // enable or disable
 
 // build cse
 cse = {
-    host    : '192.168.1.204',
+    host    : '192.168.1.236',
     port    : '7579',
     name    : 'Mobius',
     id      : '/Mobius2',
@@ -58,7 +58,7 @@ cnt_arr = [
     },
     {
         parent: '/' + cse.name + '/' + ae.name,
-        name: 'const',
+        name: 'constipation',
     },
     {
         parent: '/' + cse.name + '/' + ae.name,

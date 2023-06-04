@@ -2,11 +2,11 @@ import serial, torch, os
 from torch import nn as nn
 from torchvision import transforms, models
 from PIL import Image
-import time
+import time, sys
 # install pyserial, torch, torchvision, pillow
 
 pyserial = serial.Serial(
-    port = 'COM4',
+    port = '/dev/ttyUSB0',
     baudrate = 9600
 )
 
@@ -42,45 +42,69 @@ def eval(filename : str) :
     pred = pred.argmax(dim=1)
     return int(str(pred.item()))
 
+def getPic():
+    files_path = './capture/'
+    file_name_and_time_lst = []
+
+    for f_name in os.listdir(files_path):
+        written_time = os.path.getctime(files_path + f_name)
+        file_name_and_time_lst.append((f_name, written_time))
+    
+    file_name_and_time_lst.sort(key=lambda x: x[1], reverse=True)
+    return files_path + file_name_and_time_lst[0][0]
+    
+def capturePic():
+    if not os.path.exists("./capture"):
+        os.mkdir("capture")
+    os.system("scrot -u ./capture/poo.png")
 
 if __name__ == '__main__':
     CURRENT_STATE = "STAND_BY"
     NEXT_STATE = CURRENT_STATE
     FSR = 0
     US = 0
-    FSR_duration = 3
+    FSR_duration = 7
     PIC_wait = 3
-    IDEAL = 6
-    NORMAL = 9
+    IDEAL = 1
+    NORMAL = 2
+    BAD = 1
+    
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = CustomModel(0.5, 4).to(device)
     model.load_state_dict(torch.load('ACC956_model_drop5_lr00007.pth', map_location=device))
     model.eval()
 
+    exec_time = time.time()
+    is_pooped = False
     while CURRENT_STATE != "FINISH":
+
         if pyserial.readable():
             response = str(pyserial.readline()).strip("b'").strip("\\r\\n'")
             response = response.split(",")
-            FSR, US = int(response[0]), float(response[1])
-            print(f"FSR = {FSR}, US = {US}")
-            FSR = 1 if FSR > 3 else 0
-            US = 1 if US < 1500 else 0
+            try:
+                FSR, US = int(response[0]), int(response[1])
+            except:
+                FSR = 0
+                US = 0
+        
 
         if CURRENT_STATE == "STAND_BY":
-            is_pooped = False
             if FSR == 1 :
                 start_time = time.time()
+                sit_time = start_time
                 NEXT_STATE = "SIT_IN"
 
         if CURRENT_STATE == "SIT_IN":
             if FSR == 0:
-                if time.time() - start_time > FSR_duration :
+                if time.time() - sit_time > FSR_duration :
                     if is_pooped :
                         NEXT_STATE = "RESULT"
                     else :
                         NEXT_STATE = "STAND_BY"
-            
+            else :
+                sit_time = time.time()
+                
             if US == 1:
                 poo_time = time.time() # 똥 싸기 시작한 시간
                 NEXT_STATE = "STAND_PIC"
@@ -90,12 +114,11 @@ if __name__ == '__main__':
                 poo_time = time.time()
             else:
                 if time.time() - poo_time > PIC_wait :
-                    # ############################
-                    # ****** 여기서 찰칵 *********
-                    # ############################
-
+                    capturePic()
+                    time.sleep(0.1)
+                    target = getPic()
                     if not is_pooped:
-                        is_pooped = eval('test.jpg')
+                        is_pooped = eval(target)
                         if is_pooped :
                             first_poo_time = time.time() # 똥 다 싼 시간
                     NEXT_STATE = "SIT_IN"
@@ -114,21 +137,22 @@ if __name__ == '__main__':
             else :
                 constipation_rate = 2
             
-            if after_poo_time < 5*60 :
+            if after_poo_time < BAD*60 :
                 bad_habbit = 0
             else :
                 bad_habbit = 1
 
             if is_pooped :
-                stool = eval('test.jpg')
+                capturePic()
+                time.sleep(0.1)
+                target = getPic()
+                stool = eval(target)
                 print(f"{stool},{constipation_rate},{bad_habbit}")
                 NEXT_STATE = "FINISH"
                 break
-            
-        print(f"FSR = {FSR}, US = {US}, CURRENT_STATE = {CURRENT_STATE}") # and this line
 
-        time.sleep(0.001)
-        os.system("cls") # delete this line in practice
+
+        time.sleep(0.01)
         CURRENT_STATE = NEXT_STATE
 
 # 총 앉아있는 시간 =현재시각 - 감압센서 on 된 시각
